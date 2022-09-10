@@ -3,7 +3,7 @@ import qbs.FileInfo
 StaticLibrary {
     Depends { name: "cpp" }
 
-    cpp.cxxLanguageVersion: "c++11"
+    cpp.cxxLanguageVersion: "c++17"
     cpp.defines: [
 
         // You can make your code fail to compile if it uses deprecated APIs.

@@ -14,3 +14,11 @@ TEST(TestSuit, TestCase)
     ASSERT_THAT(0, Eq(0));
 }
 
+TEST(TestSuit, TestJoin)
+{
+    std::ostringstream oss;
+    join(oss, ", ", "Preved", 1, "Medved") << "\n";
+
+    std::cout << oss.str();
+}
+
