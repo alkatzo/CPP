@@ -19,8 +19,8 @@ CppApplication {
         }
     }
 
-    cpp.cxxLanguageVersion: "c++14"
-    cpp.defines: [ "GTEST_LANG_CXX14" ]
+    cpp.cxxLanguageVersion: "c++17"
+    cpp.defines: [ "GTEST_LANG_CXX17" ]
     cpp.dynamicLibraries: {
         if (qbs.hostOS.contains("windows")) {
             return [];

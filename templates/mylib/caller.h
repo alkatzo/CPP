@@ -8,7 +8,7 @@ class Caller
 public:
     Caller();
 
-    int callFoo(int, char);
+    int callFoo(const int &i, const char &c);
     int foo(Context ctx, int i, char c);
 };
 

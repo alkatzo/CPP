@@ -6,9 +6,9 @@ Caller::Caller()
 {
 }
 
-int Caller::callFoo(int, char)
+int Caller::callFoo(const int& i, const char& c)
 {
-    int res = call(this, &Caller::foo, 42, 'c');
+    int res = call(this, &Caller::foo, i, c);
     return res;
 }
 
