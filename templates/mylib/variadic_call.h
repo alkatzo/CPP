@@ -8,7 +8,7 @@ class Context {
 };
 
 template<typename RetType, typename C, typename... Params>
-RetType call(C* o, RetType (C::*method)(Context, Params...), Params&&... args) {
+RetType call(C* o, RetType (C::*method)(Context, Params...), Params... args) {
     Context c;
     return (o->*method)(c, args...);
 }

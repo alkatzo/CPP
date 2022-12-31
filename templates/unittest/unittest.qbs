@@ -36,10 +36,12 @@ CppApplication {
     .concat(googleCommon.getGMockIncludes(qbs, googletestDir))
 
     files: [
+        "tst_forward.cpp",
+    ].concat([
         "main.cpp",
         "tst_testcase.cpp",
     ].concat(googleCommon.getGTestAll(qbs, googletestDir))
-    .concat(googleCommon.getGMockAll(qbs, googletestDir))
+    .concat(googleCommon.getGMockAll(qbs, googletestDir)))
 
     Depends { name: "mylib" }
 

@@ -3,7 +3,7 @@ import qbs.FileInfo
 StaticLibrary {
     Depends { name: "cpp" }
 
-    cpp.cxxLanguageVersion: "c++17"
+    cpp.cxxLanguageVersion: "c++14"
     cpp.defines: [
 
         // You can make your code fail to compile if it uses deprecated APIs.
@@ -14,7 +14,7 @@ StaticLibrary {
     files: [
         "caller.cpp",
         "caller.h",
-        "variadic_call.h"
+        "variadic_call.h",
     ]
 
     // Default rules for deployment.
