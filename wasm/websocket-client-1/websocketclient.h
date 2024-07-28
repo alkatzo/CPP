@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QWebSocket>
 #include <QTimer>
+#include <QDateTime>
 
 class WebSocketClient : public QObject
 {
@@ -17,15 +18,15 @@ private slots:
     void onBinaryMessageReceived(const QByteArray &message);
     void onDisconnected();
     void sendPing();
-    void checkPongReceived();
+    bool checkPongReceived();
 
 private:
-    QWebSocket m_webSocket;
-    QTimer m_pingTimer;
-    QTimer m_pongTimeoutTimer;
+    QWebSocket webSocket;
+    QTimer pingTimer;
     const QByteArray pingMessage = QByteArray::fromHex("01");
     const QByteArray pongMessage = QByteArray::fromHex("02");
     const int timeoutInterval = 5000; // 5 seconds
+    QDateTime lastPongTime;
 };
 
 #endif // WEBSOCKETCLIENT_H

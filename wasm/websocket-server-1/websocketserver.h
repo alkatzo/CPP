@@ -21,9 +21,9 @@ private slots:
     void socketDisconnected();
 
 private:
-    QWebSocketServer *m_pWebSocketServer;
-    QList<QWebSocket *> m_clients;
-    QHash<QWebSocket *, QTimer *> m_pingTimers;
+    QWebSocketServer webSocketServer;
+    QList<QWebSocket *> clients;
+    QHash<QWebSocket *, QTimer *> pingTimers;
     const QByteArray pingMessage = QByteArray::fromHex("01");
     const QByteArray pongMessage = QByteArray::fromHex("02");
     const int timeoutInterval = 5000; // 5 seconds

@@ -5,26 +5,24 @@
 WebSocketClient::WebSocketClient(const QUrl &url, QObject *parent)
     : QObject(parent)
 {
-    connect(&m_webSocket, &QWebSocket::connected, this, &WebSocketClient::onConnected);
-    connect(&m_webSocket, &QWebSocket::disconnected, this, &WebSocketClient::onDisconnected);
+    connect(&webSocket, &QWebSocket::connected, this, &WebSocketClient::onConnected);
+    connect(&webSocket, &QWebSocket::disconnected, this, &WebSocketClient::onDisconnected);
 
-    m_webSocket.open(url);
+    webSocket.open(url);
 
-    m_pingTimer.setInterval(timeoutInterval);
-    connect(&m_pingTimer, &QTimer::timeout, this, &WebSocketClient::sendPing);
-
-    connect(&m_pongTimeoutTimer, &QTimer::timeout, this, &WebSocketClient::checkPongReceived);
+    pingTimer.setInterval(timeoutInterval);
+    connect(&pingTimer, &QTimer::timeout, this, &WebSocketClient::sendPing);
 }
 
 void WebSocketClient::onConnected()
 {
-    connect(&m_webSocket, &QWebSocket::textMessageReceived, this, &WebSocketClient::onTextMessageReceived);
-    connect(&m_webSocket, &QWebSocket::binaryMessageReceived, this, &WebSocketClient::onBinaryMessageReceived);
+    qDebug() << QDateTime::currentDateTime() << __FUNCTION__<< "WebSocket connected";
 
-    m_pingTimer.start();
-    m_pongTimeoutTimer.start(timeoutInterval);
+    connect(&webSocket, &QWebSocket::textMessageReceived, this, &WebSocketClient::onTextMessageReceived);
+    connect(&webSocket, &QWebSocket::binaryMessageReceived, this, &WebSocketClient::onBinaryMessageReceived);
 
-    qDebug() << "WebSocket connected";
+    lastPongTime = QDateTime::currentDateTime();
+    pingTimer.start();
 }
 
 void WebSocketClient::onTextMessageReceived(const QString &message)
@@ -34,26 +32,33 @@ void WebSocketClient::onTextMessageReceived(const QString &message)
 
 void WebSocketClient::onBinaryMessageReceived(const QByteArray &message)
 {
+    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Binary message received:" << message;
     if (message == pongMessage) {
-        qDebug() << "Pong received";
-        m_pongTimeoutTimer.start(timeoutInterval); // Reset the timeout timer on pong
+        qDebug() << QDateTime::currentDateTime() << __FUNCTION__<< "Pong received";
+        lastPongTime = QDateTime::currentDateTime();
     }
 }
 
 void WebSocketClient::onDisconnected()
 {
-    m_pingTimer.stop();
-    m_pongTimeoutTimer.stop();
-    qDebug() << "WebSocket disconnected";
+    pingTimer.stop();
+    qDebug() << QDateTime::currentDateTime() << __FUNCTION__<< "WebSocket disconnected";
 }
 
 void WebSocketClient::sendPing()
 {
-    m_webSocket.sendBinaryMessage(pingMessage);
+    if (checkPongReceived()) {
+        qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Sending Ping";
+        webSocket.sendBinaryMessage(pingMessage);
+    }
 }
 
-void WebSocketClient::checkPongReceived()
+bool WebSocketClient::checkPongReceived()
 {
-    qDebug() << "Pong not received in time, closing connection";
-    m_webSocket.close();
+    if (lastPongTime.msecsTo(QDateTime::currentDateTime()) > 2 * timeoutInterval * 1000) {
+        qDebug() << QDateTime::currentDateTime() << __FUNCTION__<< "Pong not received in time, closing connection";
+        webSocket.close();
+        return false;
+    }
+    return true;
 }
