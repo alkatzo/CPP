@@ -1,5 +1,4 @@
 #include "websocketclient.h"
-
 #include <QDebug>
 
 WebSocketClient::WebSocketClient(const QUrl &url, QObject *parent)
@@ -9,20 +8,14 @@ WebSocketClient::WebSocketClient(const QUrl &url, QObject *parent)
     connect(&webSocket, &QWebSocket::disconnected, this, &WebSocketClient::onDisconnected);
 
     webSocket.open(url);
-
-    pingTimer.setInterval(timeoutInterval);
-    connect(&pingTimer, &QTimer::timeout, this, &WebSocketClient::sendPing);
 }
 
 void WebSocketClient::onConnected()
 {
-    qDebug() << QDateTime::currentDateTime() << __FUNCTION__<< "WebSocket connected";
+    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "WebSocket connected";
 
     connect(&webSocket, &QWebSocket::textMessageReceived, this, &WebSocketClient::onTextMessageReceived);
     connect(&webSocket, &QWebSocket::binaryMessageReceived, this, &WebSocketClient::onBinaryMessageReceived);
-
-    lastPongTime = QDateTime::currentDateTime();
-    pingTimer.start();
 }
 
 void WebSocketClient::onTextMessageReceived(const QString &message)
@@ -32,33 +25,29 @@ void WebSocketClient::onTextMessageReceived(const QString &message)
 
 void WebSocketClient::onBinaryMessageReceived(const QByteArray &message)
 {
-    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Binary message received:" << message;
-    if (message == pongMessage) {
-        qDebug() << QDateTime::currentDateTime() << __FUNCTION__<< "Pong received";
-        lastPongTime = QDateTime::currentDateTime();
+    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Binary message received:" << message.toHex();
+
+    QDataStream stream(message);
+    int number;
+    stream >> number;
+
+    if (stream.status() == QDataStream::Ok) {
+        qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Received integer:" << number;
+    } else {
+        qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Failed to convert message to integer";
     }
 }
 
 void WebSocketClient::onDisconnected()
 {
-    pingTimer.stop();
-    qDebug() << QDateTime::currentDateTime() << __FUNCTION__<< "WebSocket disconnected";
+    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "WebSocket disconnected";
 }
 
-void WebSocketClient::sendPing()
+void WebSocketClient::sendMessage(int number)
 {
-    if (checkPongReceived()) {
-        qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Sending Ping";
-        webSocket.sendBinaryMessage(pingMessage);
-    }
-}
-
-bool WebSocketClient::checkPongReceived()
-{
-    if (lastPongTime.msecsTo(QDateTime::currentDateTime()) > 2 * timeoutInterval * 1000) {
-        qDebug() << QDateTime::currentDateTime() << __FUNCTION__<< "Pong not received in time, closing connection";
-        webSocket.close();
-        return false;
-    }
-    return true;
+    QByteArray message;
+    QDataStream stream(&message, QIODevice::WriteOnly);
+    stream << number;
+    webSocket.sendBinaryMessage(message);
+    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Sent binary message:" << message.toHex();
 }

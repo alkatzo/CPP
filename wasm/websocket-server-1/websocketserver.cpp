@@ -29,16 +29,6 @@ void WebSocketServer::onNewConnection()
 
     clients << pSocket;
 
-    QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, [this, pSocket]() {
-        pSocket->sendBinaryMessage(pingMessage);
-    });
-    connect(pSocket, &QWebSocket::pong, [this, pSocket, timer](quint64, const QByteArray &) {
-        timer->start(timeoutInterval); // Reset the timer on pong
-    });
-    pingTimers[pSocket] = timer;
-    timer->start(timeoutInterval);
-
     qDebug() << "New client connected";
 }
 
@@ -55,9 +45,14 @@ void WebSocketServer::processBinaryMessage(const QByteArray &message)
     qDebug() << __FUNCTION__;
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (pClient) {
-        if (message == pingMessage) {
-            qDebug() << __FUNCTION__ << "Sending Pong";
-            pClient->sendBinaryMessage(pongMessage);
+        QDataStream stream(message);
+        int number;
+        stream >> number;
+
+        if (stream.status() == QDataStream::Ok) {
+            qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Received integer:" << number;
+        } else {
+            qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Failed to convert message to integer";
         }
     }
 }
@@ -67,12 +62,16 @@ void WebSocketServer::socketDisconnected()
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (pClient) {
         clients.removeAll(pClient);
-        QTimer *timer = pingTimers.take(pClient);
-        if (timer) {
-            timer->stop();
-            delete timer;
-        }
         pClient->deleteLater();
         qDebug() << "Client disconnected";
     }
+}
+
+void WebSocketServer::sendMessageToAllClients(int number)
+{
+    QString message = QString::number(number);
+    for (QWebSocket *client : qAsConst(clients)) {
+        client->sendTextMessage(message);
+    }
+    qDebug() << "Sent message to all clients:" << message;
 }
