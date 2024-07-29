@@ -1,4 +1,5 @@
 #include "websocketserver.h"
+
 #include <QDebug>
 
 WebSocketServer::WebSocketServer(quint16 port, QObject *parent)
@@ -70,7 +71,7 @@ void WebSocketServer::socketDisconnected()
 void WebSocketServer::sendMessageToAllClients(int number)
 {
     QString message = QString::number(number);
-    for (QWebSocket *client : qAsConst(clients)) {
+    for (QWebSocket *client : std::as_const(clients)) {
         client->sendTextMessage(message);
     }
     qDebug() << "Sent message to all clients:" << message;

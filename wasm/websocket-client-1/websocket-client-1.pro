@@ -9,11 +9,13 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ../common/log/logger.cpp \
     main.cpp \
     mainwindow.cpp \
     websocketclient.cpp
 
 HEADERS += \
+    ../common/log/logger.h \
     mainwindow.h \
     websocketclient.h
 

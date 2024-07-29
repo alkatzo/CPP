@@ -1,5 +1,6 @@
 #include "websocketclient.h"
 #include <QDebug>
+#include <QDateTime>
 
 WebSocketClient::WebSocketClient(const QUrl &url, QObject *parent)
     : QObject(parent)
@@ -12,7 +13,7 @@ WebSocketClient::WebSocketClient(const QUrl &url, QObject *parent)
 
 void WebSocketClient::onConnected()
 {
-    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "WebSocket connected";
+    qDebug() << __FUNCTION__ << "WebSocket connected";
 
     connect(&webSocket, &QWebSocket::textMessageReceived, this, &WebSocketClient::onTextMessageReceived);
     connect(&webSocket, &QWebSocket::binaryMessageReceived, this, &WebSocketClient::onBinaryMessageReceived);
@@ -25,22 +26,22 @@ void WebSocketClient::onTextMessageReceived(const QString &message)
 
 void WebSocketClient::onBinaryMessageReceived(const QByteArray &message)
 {
-    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Binary message received:" << message.toHex();
+    qDebug() << __FUNCTION__ << "Binary message received:" << message.toHex();
 
     QDataStream stream(message);
     int number;
     stream >> number;
 
     if (stream.status() == QDataStream::Ok) {
-        qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Received integer:" << number;
+        qDebug() << __FUNCTION__ << "Received integer:" << number;
     } else {
-        qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Failed to convert message to integer";
+        qDebug() << __FUNCTION__ << "Failed to convert message to integer";
     }
 }
 
 void WebSocketClient::onDisconnected()
 {
-    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "WebSocket disconnected";
+    qDebug() << __FUNCTION__ << "WebSocket disconnected";
 }
 
 void WebSocketClient::sendMessage(int number)
@@ -49,5 +50,5 @@ void WebSocketClient::sendMessage(int number)
     QDataStream stream(&message, QIODevice::WriteOnly);
     stream << number;
     webSocket.sendBinaryMessage(message);
-    qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Sent binary message:" << message.toHex();
+    qDebug() << __FUNCTION__ << "Sent binary message:" << message.toHex();
 }
