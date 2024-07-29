@@ -9,7 +9,8 @@ WebSocketServer::WebSocketServer(quint16 port, QObject *parent)
     if (webSocketServer.listen(QHostAddress::Any, port)) {
         connect(&webSocketServer, &QWebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
         qDebug() << "WebSocket server listening on port" << port;
-    } else {
+    }
+    else {
         qDebug() << "Error starting WebSocket server:" << webSocketServer.errorString();
     }
 }
@@ -52,7 +53,8 @@ void WebSocketServer::processBinaryMessage(const QByteArray &message)
 
         if (stream.status() == QDataStream::Ok) {
             qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Received integer:" << number;
-        } else {
+        }
+        else {
             qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Failed to convert message to integer";
         }
     }

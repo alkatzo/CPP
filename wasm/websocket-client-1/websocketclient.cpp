@@ -34,7 +34,8 @@ void WebSocketClient::onBinaryMessageReceived(const QByteArray &message)
 
     if (stream.status() == QDataStream::Ok) {
         qDebug() << __FUNCTION__ << "Received integer:" << number;
-    } else {
+    }
+    else {
         qDebug() << __FUNCTION__ << "Failed to convert message to integer";
     }
 }
