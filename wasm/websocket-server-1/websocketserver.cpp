@@ -52,7 +52,7 @@ void WebSocketServer::processBinaryMessage(const QByteArray &message)
         stream >> number;
 
         if (stream.status() == QDataStream::Ok) {
-            qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Received integer:" << number;
+            qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Received integer:" << number << "from" << pClient;
         }
         else {
             qDebug() << QDateTime::currentDateTime() << __FUNCTION__ << "Failed to convert message to integer";
