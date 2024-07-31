@@ -1,16 +1,13 @@
 #include "mainwindow.h"
-
 #include <QApplication>
-#include <QUrl>
 
-#include "websocketclient.h"
+#include "../common/log/logger.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QUrl url(QStringLiteral("ws://localhost:1234")); // Connect to the server on port 1234
-    WebSocketClient client(url);
+    qInstallMessageHandler(Logger::redirectDebugMessages);
 
     MainWindow w;
     w.show();
