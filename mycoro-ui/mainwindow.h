@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "task.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -16,6 +18,12 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+private:
+    Task exec();
+
+private slots:
+    void on_pbStart_clicked();
 
 private:
     Ui::MainWindow *ui;

@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <coroutine>
 
-struct Log {
+struct Log{
     QString msg;
     Log(const QString &str) : msg(str) {
         qDebug().noquote() << msg << "->";
@@ -27,6 +27,7 @@ public:
 
     // Constructor from handle
     Task(Handle h) : handle(h) {
+        Log log(__FUNCTION__);
         qDebug() << "Task constructor called. Handle:" << handle.address();
     }
 
@@ -37,12 +38,12 @@ private:
 struct Awaiter {
     QFuture<int> f;
     bool await_ready() const noexcept {
-        qDebug() << __PRETTY_FUNCTION__;
+        Log log(__FUNCTION__);
         return false;
     }
 
     void await_suspend(std::coroutine_handle<Promise> handle) const noexcept {
-        qDebug() << __PRETTY_FUNCTION__;
+        Log log(__FUNCTION__);
         auto *watcher = new QFutureWatcher<int>();
         QObject::connect(watcher, &QFutureWatcherBase::finished, [watcher, handle]() mutable {
             watcher->deleteLater();
@@ -52,7 +53,7 @@ struct Awaiter {
     }
 
     int await_resume() const noexcept {
-        qDebug() << __PRETTY_FUNCTION__;
+        Log log(__FUNCTION__);
         return f.result();
     }
 };
@@ -67,31 +68,31 @@ struct Awaitable {
 
 struct Promise {
     Task get_return_object() {
-        qDebug() << __PRETTY_FUNCTION__;
+        Log log(__FUNCTION__);
         return Task(Task::Handle::from_promise(*this));
     }
 
     std::suspend_never initial_suspend() noexcept {
-        qDebug() << __PRETTY_FUNCTION__;
+        Log log(__FUNCTION__);
         return {};
     }
 
     std::suspend_never final_suspend() noexcept {
-        qDebug() << __PRETTY_FUNCTION__;
-        return {}; // Suspend at final_suspend to control when it's resumed.
+        Log log(__FUNCTION__);
+        return {};
     }
 
     void unhandled_exception() {
-        qDebug() << __PRETTY_FUNCTION__;
+        Log log(__FUNCTION__);
         throw;
     }
 
     void return_value(int res) {
-        qDebug() << __PRETTY_FUNCTION__ << res;
+        qDebug() << __FUNCTION__ << res;
     }
 
     inline auto await_transform(const QFuture<int> &value) {
-        qDebug() << __PRETTY_FUNCTION__;
+        qDebug() << __FUNCTION__;
         return Awaitable{value}; // it is OK to return Awaiter from here as well
     }
 };
