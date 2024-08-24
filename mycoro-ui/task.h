@@ -14,10 +14,12 @@ struct Log{
     }
 };
 
+template <typename T>
 struct Promise;
 
+template <typename T>
 struct Task {
-    using promise_type = Promise;
+    using promise_type = Promise<T>;
     using Handle = std::coroutine_handle<promise_type>;
 
 public:
@@ -35,16 +37,33 @@ private:
     Handle handle = nullptr;
 };
 
-struct Awaiter {
-    QFuture<int> f;
+template <typename T>
+struct AwaiterTask {
     bool await_ready() const noexcept {
         Log log(__FUNCTION__);
         return false;
     }
 
-    void await_suspend(std::coroutine_handle<Promise> handle) const noexcept {
+    void await_suspend(std::coroutine_handle<> handle) const noexcept {
         Log log(__FUNCTION__);
-        auto *watcher = new QFutureWatcher<int>();
+    }
+
+    T await_resume() const noexcept {
+        Log log(__FUNCTION__);
+    }
+};
+
+template <typename T>
+struct AwaiterQFuture {
+    QFuture<T> f;
+    bool await_ready() const noexcept {
+        Log log(__FUNCTION__);
+        return false;
+    }
+
+    void await_suspend(std::coroutine_handle<> handle) const noexcept {
+        Log log(__FUNCTION__);
+        auto *watcher = new QFutureWatcher<T>();
         QObject::connect(watcher, &QFutureWatcherBase::finished, [watcher, handle]() mutable {
             watcher->deleteLater();
             handle.resume();
@@ -52,24 +71,26 @@ struct Awaiter {
         watcher->setFuture(f);
     }
 
-    int await_resume() const noexcept {
+    T await_resume() const noexcept {
         Log log(__FUNCTION__);
         return f.result();
     }
 };
 
-struct Awaitable {
-    QFuture<int> f;
+template <typename T>
+struct AwaitableQFuture {
+    QFuture<T> f;
     auto operator co_await() const noexcept {
         qDebug() << __PRETTY_FUNCTION__;
-        return Awaiter{f};
+        return AwaiterQFuture<T>{f};
     }
 };
 
+template <typename T>
 struct Promise {
-    Task get_return_object() {
+    Task<T> get_return_object() {
         Log log(__FUNCTION__);
-        return Task(Task::Handle::from_promise(*this));
+        return Task<T>(Task<T>::Handle::from_promise(*this));
     }
 
     std::suspend_never initial_suspend() noexcept {
@@ -87,12 +108,12 @@ struct Promise {
         throw;
     }
 
-    void return_value(int res) {
+    void return_value(T res) {
         qDebug() << __FUNCTION__ << res;
     }
 
-    inline auto await_transform(const QFuture<int> &value) {
+    inline auto await_transform(const QFuture<T> &value) {
         qDebug() << __FUNCTION__;
-        return Awaitable{value}; // it is OK to return Awaiter from here as well
+        return AwaitableQFuture<T>{value}; // it is OK to return Awaiter from here as well
     }
 };

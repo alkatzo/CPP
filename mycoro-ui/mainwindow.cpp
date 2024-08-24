@@ -25,8 +25,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-Task MainWindow::exec()
+Task<int> MainWindow::exec()
 {
+    Log log(__FUNCTION__);
     QFuture<int> f = QtConcurrent::run(sleepFunction);
     qDebug() << __PRETTY_FUNCTION__ << "co_await f ...";
     int res = co_await f;
@@ -34,9 +35,18 @@ Task MainWindow::exec()
     co_return res;
 }
 
+// Task<int> MainWindow::exec_outer()
+// {
+//     Log log(__FUNCTION__);
+//     qDebug() << __PRETTY_FUNCTION__ << "Calling exec()";
+//     co_return co_await exec();
+//     qDebug() << __PRETTY_FUNCTION__ << "Finished exec()";
+// }
+
 void MainWindow::on_pbStart_clicked()
 {
     qDebug() << __PRETTY_FUNCTION__ << "Calling exec()";
+    // exec_outer();
     exec();
     qDebug() << __PRETTY_FUNCTION__ << "Finished exec()";
 }

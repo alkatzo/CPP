@@ -27,3 +27,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 win32 {
     DEFINES += __PRETTY_FUNCTION__=__FUNCTION__
 }
+DEFINES += __cpp_impl_coroutine
