@@ -27,30 +27,20 @@ public:
     Task(const Task&) = delete;
     Task& operator=(const Task&) = delete;
 
+    Task(Task &&task) : handle(task.handle) {
+        task.handle = nullptr;
+    }
+
     // Constructor from handle
     Task(Handle h) : handle(h) {
-        Log log(__FUNCTION__);
+        qDebug() << __FUNCTION__;
         qDebug() << "Task constructor called. Handle:" << handle.address();
     }
 
+    auto operator co_await() const noexcept;
+
 private:
-    Handle handle = nullptr;
-};
-
-template <typename T>
-struct AwaiterTask {
-    bool await_ready() const noexcept {
-        Log log(__FUNCTION__);
-        return false;
-    }
-
-    void await_suspend(std::coroutine_handle<> handle) const noexcept {
-        Log log(__FUNCTION__);
-    }
-
-    T await_resume() const noexcept {
-        Log log(__FUNCTION__);
-    }
+    std::coroutine_handle<promise_type> handle = nullptr;
 };
 
 template <typename T>
@@ -58,12 +48,12 @@ struct AwaiterQFuture {
     QFuture<T> f;
 
     bool await_ready() const noexcept {
-        Log log(__FUNCTION__);
+        qDebug() << __FUNCTION__;
         return f.isFinished() || f.isCanceled();
     }
 
     void await_suspend(std::coroutine_handle<> handle) const noexcept {
-        Log log(__FUNCTION__);
+        qDebug() << __FUNCTION__;
         auto *watcher = new QFutureWatcher<T>();
         QObject::connect(watcher, &QFutureWatcherBase::finished, [watcher, handle]() mutable {
             watcher->deleteLater();
@@ -73,7 +63,7 @@ struct AwaiterQFuture {
     }
 
     T await_resume() const noexcept {
-        Log log(__FUNCTION__);
+        qDebug() << __FUNCTION__;
         return f.result();
     }
 };
@@ -82,7 +72,7 @@ template <typename T>
 struct AwaitableQFuture {
     QFuture<T> f;
     auto operator co_await() const noexcept {
-        qDebug() << __PRETTY_FUNCTION__;
+        qDebug() << __FUNCTION__;
         return AwaiterQFuture<T>{f};
     }
 };
@@ -102,22 +92,22 @@ struct awaitable_type<QFuture<T>> {
 template <typename T>
 struct Promise {
     Task<T> get_return_object() {
-        Log log(__FUNCTION__);
-        return Task<T>(Task<T>::Handle::from_promise(*this));
+        qDebug() << __FUNCTION__;
+        return Task<T>(std::coroutine_handle<Task<T>::promise_type>::from_promise(*this));
     }
 
     std::suspend_never initial_suspend() noexcept {
-        Log log(__FUNCTION__);
+        qDebug() << __FUNCTION__;
         return {};
     }
 
     std::suspend_never final_suspend() noexcept {
-        Log log(__FUNCTION__);
+        qDebug() << __FUNCTION__;
         return {};
     }
 
     void unhandled_exception() {
-        Log log(__FUNCTION__);
+        qDebug() << __FUNCTION__;
         throw;
     }
 
@@ -125,9 +115,44 @@ struct Promise {
         qDebug() << __FUNCTION__ << res;
     }
 
+    // co_await exp calls this
     template<typename E, typename AwaitableT = awaitable_type_t<std::remove_cvref_t<E>>>
     inline auto await_transform(E &&value) {
         qDebug() << __FUNCTION__;
         return AwaitableT{value}; // it is OK to return Awaiter from here as well
     }
+
+    // override for when expr is a Task rvalue
+    template<typename T>
+    auto await_transform(Task<T> &&task) {
+        return std::forward<Task<T>>(task);
+    }
+
+    // override for when expr is a Task ref
+    template<typename T>
+    auto await_transform(Task<T> &task) {
+        return task;
+    }
 };
+
+template<typename T>
+inline auto Task<T>::operator co_await() const noexcept {
+    //! Specialization of the TaskAwaiterBase that returns the promise result by value
+    struct AwaiterTask {
+        bool await_ready() const noexcept {
+            qDebug() << __FUNCTION__;
+            return false;
+        }
+
+        void await_suspend(std::coroutine_handle<> handle) const noexcept {
+            qDebug() << __FUNCTION__;
+        }
+
+        T await_resume() const noexcept {
+            qDebug() << __FUNCTION__;
+            return {};
+        }
+    };
+
+    return AwaiterTask{};
+}
