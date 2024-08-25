@@ -56,9 +56,10 @@ struct AwaiterTask {
 template <typename T>
 struct AwaiterQFuture {
     QFuture<T> f;
+
     bool await_ready() const noexcept {
         Log log(__FUNCTION__);
-        return false;
+        return f.isFinished() || f.isCanceled();
     }
 
     void await_suspend(std::coroutine_handle<> handle) const noexcept {
@@ -86,6 +87,18 @@ struct AwaitableQFuture {
     }
 };
 
+template<typename T>
+struct awaitable_type;
+
+template<typename T>
+using awaitable_type_t = typename awaitable_type<T>::type;
+
+template<typename T>
+struct awaitable_type<QFuture<T>> {
+    using type = AwaitableQFuture<T>;
+};
+
+
 template <typename T>
 struct Promise {
     Task<T> get_return_object() {
@@ -112,8 +125,9 @@ struct Promise {
         qDebug() << __FUNCTION__ << res;
     }
 
-    inline auto await_transform(const QFuture<T> &value) {
+    template<typename E, typename AwaitableT = awaitable_type_t<std::remove_cvref_t<E>>>
+    inline auto await_transform(E &&value) {
         qDebug() << __FUNCTION__;
-        return AwaitableQFuture<T>{value}; // it is OK to return Awaiter from here as well
+        return AwaitableT{value}; // it is OK to return Awaiter from here as well
     }
 };
