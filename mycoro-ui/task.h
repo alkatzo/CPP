@@ -20,7 +20,6 @@ struct Promise;
 template <typename T>
 struct Task {
     using promise_type = Promise<T>;
-    using Handle = std::coroutine_handle<promise_type>;
 
 public:
     // Deleted copy constructor and copy assignment operator
@@ -32,7 +31,7 @@ public:
     }
 
     // Constructor from handle
-    Task(Handle h) : handle(h) {
+    Task(std::coroutine_handle<promise_type> h) : handle(h) {
         qDebug() << __FUNCTION__;
         qDebug() << "Task constructor called. Handle:" << handle.address();
     }
@@ -93,7 +92,7 @@ template <typename T>
 struct Promise {
     Task<T> get_return_object() {
         qDebug() << __FUNCTION__;
-        return Task<T>(std::coroutine_handle<Task<T>::promise_type>::from_promise(*this));
+        return Task<T>(std::coroutine_handle<Promise>::from_promise(*this));
     }
 
     std::suspend_never initial_suspend() noexcept {
