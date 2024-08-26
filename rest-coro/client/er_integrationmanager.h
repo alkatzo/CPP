@@ -4,7 +4,7 @@
 #include <QString>
 #include <queue>
 
-#include "openapi/ER_DefaultApi.h"
+#include "er_apidefault.h"
 
 namespace er {
 

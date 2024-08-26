@@ -30,7 +30,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pbStart_clicked()
 {
-    er::ER_DefaultApi *api = er::IntegrationManager::erApi<er::ER_DefaultApi>().release();
+    er::ApiDefault *api = er::IntegrationManager::erApi<er::ApiDefault>().release();
     api->peopleGet(QDateTime::currentDateTime());
 }
 
