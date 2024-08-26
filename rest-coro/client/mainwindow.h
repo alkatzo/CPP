@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QMainWindow>
 
@@ -16,6 +17,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void on_pbStart_clicked();
+
 private:
     Ui::MainWindow *ui;
 };
+#endif // MAINWINDOW_H
