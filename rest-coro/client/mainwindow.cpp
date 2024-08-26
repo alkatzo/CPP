@@ -32,5 +32,11 @@ void MainWindow::on_pbStart_clicked()
 {
     er::ApiDefault *api = er::IntegrationManager::erApi<er::ApiDefault>().release();
     api->peopleGet(QDateTime::currentDateTime());
+    connect(api, &er::ApiDefault::peopleGetCompletedOK, this, [](QList<er::ER__people_get_200_response_inner> result){
+        qDebug() << __FUNCTION__ << "Got results";
+        for (const er::ER__people_get_200_response_inner& r : result) {
+            qDebug() << r.getFirstName() << r.getLastName() << r.getDateOfBirth();
+        }
+    });
 }
 
