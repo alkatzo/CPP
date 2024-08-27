@@ -16,8 +16,4 @@ void Client::requestCompleted() {
     Dispatcher::instance().requestCompleted();
 }
 
-API::API() {
-
-}
-
 }

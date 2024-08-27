@@ -9,13 +9,6 @@
 #include "er_integrationmanager.h"
 #include "helper.h"
 
-int sleepFunction() {
-    qDebug() << "Thread started, sleeping for 5 seconds...\n";
-    QThread::sleep(5);
-    qDebug() << "Thread finished sleeping.\n";
-    return 42;
-}
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -33,11 +26,12 @@ void MainWindow::exec_connect()
 {
     er::ApiDefault *api = er::IntegrationManager::erApi<er::ApiDefault>().release();
     api->peopleGet(QDateTime::currentDateTime());
-    connect(api, &er::ApiDefault::peopleGetCompletedOK, this, [](QList<er::ER__people_get_200_response_inner> result){
+    connect(api, &er::ApiDefault::peopleGetCompletedOK, this, [api](QList<er::ER__people_get_200_response_inner> result){
         qDebug() << __FUNCTION__ << "Got results";
         for (const er::ER__people_get_200_response_inner& r : result) {
             qDebug() << r.getFirstName() << r.getLastName() << r.getDateOfBirth();
         }
+        api->deleteLater();
     });
 }
 
@@ -62,6 +56,8 @@ QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_await
         qDebug() << "Calling api->peopleGet() with page" << i;
         result.append(co_await api->peopleGet(QDateTime::currentDateTime(), i));
     }
+
+    api->deleteLater();
 
     co_return result;
 }

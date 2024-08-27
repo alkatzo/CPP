@@ -11,7 +11,6 @@ namespace er {
 class Client {
 
 protected:
-
     void post(const std::function<void()> &request);
     void send(const std::function<void()> &request);
     void requestCompleted();
@@ -39,7 +38,7 @@ protected:
      * @brief onCompleted - tell the dispatcher the request is finished and mark the api object for deletion
      */
     template<class T, class Source, class API>
-    void onCompleted(const Source &source, void (T::*signalCompleted)(), API &api) {
+    void onCompleted(const Source &source, void (T::*signalCompleted)(), API *api) {
         qDebug() << source << Completed;
         Q_EMIT (static_cast<T*>(this)->*signalCompleted)();
         requestCompleted();
@@ -52,17 +51,9 @@ protected:
     static constexpr char Completed[] = "-> Completed";
 };
 
-class API : public Client {
+class RAPI : public Client {
 
 protected:
-    API();
-};
-
-class RAPI : public API {
-
-protected:
-    RAPI() = default;
-
     void wire(auto source, auto s_success, auto s_error, auto s_completed, auto s_api_success, auto s_api_error, auto s_api_completed, auto auth_rerun, auto authAttempt, auto api, auto f) {
         // connect successful response
         QObject::connect(api, s_api_success, api, [=, this](auto summary) {

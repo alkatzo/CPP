@@ -7,17 +7,14 @@ template<typename T>
 struct ER_Future
 {
     bool await_ready() const noexcept {
-        LOG
         return false;
     }
 
     void await_suspend(std::coroutine_handle<> h) {
-        LOG
         promise->handle = h;
     }
 
     T await_resume() const {
-        LOG
         return promise->result;
     }
 
