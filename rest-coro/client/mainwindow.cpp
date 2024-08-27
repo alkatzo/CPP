@@ -5,6 +5,7 @@
 
 #include <chrono>
 
+#include "er_future.h"
 #include "er_integrationmanager.h"
 
 
@@ -28,7 +29,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_pbStart_clicked()
+void MainWindow::exec_connect()
 {
     er::ApiDefault *api = er::IntegrationManager::erApi<er::ApiDefault>().release();
     api->peopleGet(QDateTime::currentDateTime());
@@ -38,5 +39,16 @@ void MainWindow::on_pbStart_clicked()
             qDebug() << r.getFirstName() << r.getLastName() << r.getDateOfBirth();
         }
     });
+}
+
+QCoro::Task<int> MainWindow::exec_await()
+{
+    co_await ER_Future<int>();
+    co_return 42;
+}
+
+void MainWindow::on_pbStart_clicked()
+{
+    exec_connect();
 }
 

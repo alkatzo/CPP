@@ -20,6 +20,7 @@ HEADERS += \
     er_apidefault.h \
     er_base.h \
     er_dispatcher.h \
+    er_future.h \
     er_integrationmanager.h \
     mainwindow.h
 
