@@ -22,6 +22,7 @@ HEADERS += \
     er_dispatcher.h \
     er_future.h \
     er_integrationmanager.h \
+    helper.h \
     mainwindow.h
 
 FORMS += \

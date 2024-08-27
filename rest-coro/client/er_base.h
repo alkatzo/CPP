@@ -63,10 +63,11 @@ class RAPI : public API {
 protected:
     RAPI() = default;
 
-    void wire(auto source, auto s_success, auto s_error, auto s_completed, auto s_api_success, auto s_api_error, auto s_api_completed, auto auth_rerun, auto authAttempt, auto api) {
+    void wire(auto source, auto s_success, auto s_error, auto s_completed, auto s_api_success, auto s_api_error, auto s_api_completed, auto auth_rerun, auto authAttempt, auto api, auto f) {
         // connect successful response
         QObject::connect(api, s_api_success, api, [=, this](auto summary) {
             this->onSuccess(source, s_success, summary);
+            f.promise->setResult(summary);
         });
         // connect full error response
         QObject::connect(api, s_api_error, api, [=, this](auto worker, auto error_type, auto error_str) {
@@ -80,6 +81,7 @@ protected:
 };
 
 #define ER_DECLARE_SHIM_SIGNALS(SHIM_METHOD, RESPONSE_TYPE) \
+using SHIM_METHOD##ResponseType=RESPONSE_TYPE; \
 Q_SIGNALS: \
     void SHIM_METHOD##CompletedOK(RESPONSE_TYPE summary); \
     void SHIM_METHOD##CompletedE(ER_HttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
@@ -102,7 +104,8 @@ Q_SIGNALS: \
 
 #define ER_DEFINE_SIGNALS(SHIM_API, SHIM_METHOD, API, API_METHOD, ...) \
     _ER_DEFINE_SIGNALS(SHIM_API, SHIM_METHOD, API, API_METHOD) \
-    auto auth_rerun = [this, __VA_ARGS__, authAttempt](){SHIM_METHOD(__VA_ARGS__, authAttempt + 1);};\
-    wire(source, s_success, s_error, s_completed, s_api_success, s_api_error, s_api_completed, auth_rerun, 1, api);
+    auto auth_rerun = [this, __VA_ARGS__, authAttempt](){SHIM_METHOD(__VA_ARGS__, authAttempt + 1);}; \
+    ER_Future<SHIM_METHOD##ResponseType> f; \
+    wire(source, s_success, s_error, s_completed, s_api_success, s_api_error, s_api_completed, auth_rerun, 1, api, f);
 }
 

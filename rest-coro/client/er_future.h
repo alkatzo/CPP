@@ -2,29 +2,46 @@
 
 #include <QCoroTask>
 #include "qcoro/macros_p.h"
+#include "helper.h"
 
 template<typename T>
 struct ER_Future
 {
-    Q_DISABLE_COPY(ER_Future)
-    QCORO_DEFAULT_MOVE(ER_Future)
+    // Q_DISABLE_COPY(ER_Future)
+    // QCORO_DEFAULT_MOVE(ER_Future)
 
     bool await_ready() const noexcept {
+        LOG
         return false;
     }
 
-    void await_suspend(std::coroutine_handle<> awaitingCoroutine) {
-        awaitingCoroutine.resume();
+    void await_suspend(std::coroutine_handle<> h) {
+        LOG
+        promise->handle = h;
     }
 
     T await_resume() const {
-        return {};
+        LOG
+        return promise->result;
+    }
+
+    struct Promise {
+        void setResult(const T& r) {
+            LOG
+            result = r;
+            if (handle) {
+                handle.resume();
+            }
+        }
+        T result;
+        std::coroutine_handle<> handle = nullptr;
+    };
+
+    ER_Future() : promise(new Promise) {
+        LOG
     }
 
 public:
-    ER_Future() {}
-
-public:
-    T result;
+    Promise *promise;
 };
 
