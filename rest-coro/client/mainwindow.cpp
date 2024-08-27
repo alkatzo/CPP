@@ -20,8 +20,6 @@ struct Log{
     }
 };
 
-#define LOG Log log(__FUNCTION__)
-
 int sleepFunction() {
     qDebug() << "Thread started, sleeping for 5 seconds...\n";
     QThread::sleep(5);
@@ -56,14 +54,14 @@ void MainWindow::exec_connect()
 
 QCoro::Task<void> MainWindow::exec_await()
 {
-    LOG;
+    LOG
     QList<er::ER__people_get_200_response_inner> res = co_await exec_awaitCo();
     co_return;
 }
 
 QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_awaitCo()
 {
-    LOG;
+    LOG
     auto api = er::IntegrationManager::erApi<er::ApiDefault>();
     co_return co_await api->peopleGet(QDateTime::currentDateTime());
     // co_await ER_Future<int>();
@@ -72,7 +70,7 @@ QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_await
 
 void MainWindow::on_pbStart_clicked()
 {
-    LOG;
+    LOG
     exec_await();
     // exec_connect();
 }

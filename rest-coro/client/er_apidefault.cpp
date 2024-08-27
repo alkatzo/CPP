@@ -9,7 +9,8 @@ ER_Future<QList<ER__people_get_200_response_inner> > ApiDefault::peopleGet(QDate
         api->peopleGet(dt);
     });
 
-    return ER_Future<QList<ER__people_get_200_response_inner>>();
+    auto f = ER_Future<QList<ER__people_get_200_response_inner>>();
+    return f;
 }
 
 }
