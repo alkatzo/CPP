@@ -8,6 +8,19 @@
 #include "er_future.h"
 #include "er_integrationmanager.h"
 
+#define LOG Log log(__FUNCTION__)
+
+struct Log{
+    QString msg;
+    Log(const QString &str) : msg(str) {
+        qDebug().noquote() << msg << "->";
+    }
+    ~Log() {
+        qDebug().noquote() << msg << "<-";
+    }
+};
+
+#define LOG Log log(__FUNCTION__)
 
 int sleepFunction() {
     qDebug() << "Thread started, sleeping for 5 seconds...\n";
@@ -41,14 +54,26 @@ void MainWindow::exec_connect()
     });
 }
 
-QCoro::Task<int> MainWindow::exec_await()
+QCoro::Task<void> MainWindow::exec_await()
 {
-    co_await ER_Future<int>();
-    co_return 42;
+    LOG;
+    QList<er::ER__people_get_200_response_inner> res = co_await exec_awaitCo();
+    co_return;
+}
+
+QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_awaitCo()
+{
+    LOG;
+    auto api = er::IntegrationManager::erApi<er::ApiDefault>();
+    co_return co_await api->peopleGet(QDateTime::currentDateTime());
+    // co_await ER_Future<int>();
+    // co_return 42;
 }
 
 void MainWindow::on_pbStart_clicked()
 {
-    exec_connect();
+    LOG;
+    exec_await();
+    // exec_connect();
 }
 

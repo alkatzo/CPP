@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 #include "qcoro/qcorotask.h"
+#include "openapi/ER_DefaultApi.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,7 +22,8 @@ public:
 
 private:
     void exec_connect();
-    QCoro::Task<int> exec_await();
+    QCoro::Task<void> exec_await();
+    QCoro::Task<QList<er::ER__people_get_200_response_inner>> exec_awaitCo();
 
 private slots:
     void on_pbStart_clicked();
