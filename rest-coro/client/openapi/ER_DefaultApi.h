@@ -58,8 +58,9 @@ public:
 
     /**
     * @param[in]  datetime QDateTime [required]
+    * @param[in]  page qint32 [optional]
     */
-    void peopleGet(const QDateTime &datetime);
+    void peopleGet(const QDateTime &datetime, const ::er::OptionalParam<qint32> &page = ::er::OptionalParam<qint32>());
 
 
 private:

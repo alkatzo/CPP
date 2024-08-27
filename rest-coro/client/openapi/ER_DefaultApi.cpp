@@ -212,7 +212,7 @@ QString ER_DefaultApi::getParamStyleDelimiter(const QString &style, const QStrin
     }
 }
 
-void ER_DefaultApi::peopleGet(const QDateTime &datetime) {
+void ER_DefaultApi::peopleGet(const QDateTime &datetime, const ::er::OptionalParam<qint32> &page) {
     QString fullPath = QString(_serverConfigs["peopleGet"][_serverIndices.value("peopleGet")].URL()+"/people");
     
     QString queryPrefix, querySuffix, queryDelimiter, queryStyle;
@@ -230,6 +230,21 @@ void ER_DefaultApi::peopleGet(const QDateTime &datetime) {
             fullPath.append("?");
 
         fullPath.append(QUrl::toPercentEncoding("datetime")).append(querySuffix).append(QUrl::toPercentEncoding(::er::toStringValue(datetime)));
+    }
+    if (page.hasValue())
+    {
+        queryStyle = "form";
+        if (queryStyle == "")
+            queryStyle = "form";
+        queryPrefix = getParamStylePrefix(queryStyle);
+        querySuffix = getParamStyleSuffix(queryStyle);
+        queryDelimiter = getParamStyleDelimiter(queryStyle, "page", true);
+        if (fullPath.indexOf("?") > 0)
+            fullPath.append(queryPrefix);
+        else
+            fullPath.append("?");
+
+        fullPath.append(QUrl::toPercentEncoding("page")).append(querySuffix).append(QUrl::toPercentEncoding(::er::toStringValue(page.value())));
     }
     ER_HttpRequestWorker *worker = new ER_HttpRequestWorker(this, _manager);
     worker->setTimeOut(_timeOut);

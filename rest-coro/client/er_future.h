@@ -1,15 +1,11 @@
 #pragma once
 
 #include <QCoroTask>
-#include "qcoro/macros_p.h"
 #include "helper.h"
 
 template<typename T>
 struct ER_Future
 {
-    // Q_DISABLE_COPY(ER_Future)
-    // QCORO_DEFAULT_MOVE(ER_Future)
-
     bool await_ready() const noexcept {
         LOG
         return false;

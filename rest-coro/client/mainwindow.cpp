@@ -56,7 +56,14 @@ QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_await
 {
     LOG
     auto api = er::IntegrationManager::erApi<er::ApiDefault>().release();
-    co_return co_await api->peopleGet(QDateTime::currentDateTime());
+
+    QList<er::ER__people_get_200_response_inner> result;
+    for (int i = 1; i < 4; i++) {
+        qDebug() << "Calling api->peopleGet() with page" << i;
+        result.append(co_await api->peopleGet(QDateTime::currentDateTime(), i));
+    }
+
+    co_return result;
 }
 
 void MainWindow::on_pbStart_clicked()
