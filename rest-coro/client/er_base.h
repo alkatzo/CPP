@@ -3,6 +3,7 @@
 #include <QObject>
 
 #include <functional>
+#include <coroutine>
 
 #include "openapi/ER_HttpRequest.h"
 
@@ -43,7 +44,7 @@ protected:
         Q_EMIT (static_cast<T*>(this)->*signalCompleted)();
         requestCompleted();
         api->deleteLater();
-    }    
+    }
 
 protected:
     static constexpr char OK[] = "-> OK";
@@ -63,6 +64,7 @@ protected:
         // connect full error response
         QObject::connect(api, s_api_error, api, [=, this](auto worker, auto error_type, auto error_str) {
             this->onError(source, auth_rerun, authAttempt, 1, s_error, worker, error_type, error_str);
+            f.promise->setError();
         });
         // connect request completed
         QObject::connect(api, s_api_completed, api, [=, this]() {
@@ -70,6 +72,50 @@ protected:
         });
     }
 };
+
+template<typename T>
+class RAPIFuture
+{
+    friend class RAPI;
+
+public:
+    RAPIFuture() : promise(new Promise) {
+    }
+
+    bool await_ready() const noexcept {
+        return false;
+    }
+
+    void await_suspend(std::coroutine_handle<> h) {
+        promise->handle = h;
+    }
+
+    T await_resume() const {
+        return promise->result;
+    }
+
+private:
+    struct Promise {
+        void setResult(const T& r) {
+            if (handle && !handle.done()) {
+                result = r;
+                handle.resume();
+            }
+        }
+
+        void setError() {
+            if (handle && !handle.done()) {
+                handle.resume();
+            }
+        }
+
+        T result;
+        std::coroutine_handle<> handle = nullptr;
+    };
+
+    std::shared_ptr<Promise> promise;
+};
+
 
 #define ER_DECLARE_SHIM_SIGNALS(SHIM_METHOD, RESPONSE_TYPE) \
 using SHIM_METHOD##ResponseType=RESPONSE_TYPE; \
@@ -96,7 +142,7 @@ Q_SIGNALS: \
 #define ER_DEFINE_SIGNALS(SHIM_API, SHIM_METHOD, API, API_METHOD, ...) \
     _ER_DEFINE_SIGNALS(SHIM_API, SHIM_METHOD, API, API_METHOD) \
     auto auth_rerun = [this, __VA_ARGS__, authAttempt](){SHIM_METHOD(__VA_ARGS__, authAttempt + 1);}; \
-    ER_Future<SHIM_METHOD##ResponseType> f; \
+    RAPIFuture<SHIM_METHOD##ResponseType> f; \
     wire(source, s_success, s_error, s_completed, s_api_success, s_api_error, s_api_completed, auth_rerun, 1, api, f);
 }
 

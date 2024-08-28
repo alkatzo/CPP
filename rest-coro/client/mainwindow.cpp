@@ -5,9 +5,20 @@
 
 #include <chrono>
 
-#include "er_future.h"
 #include "er_integrationmanager.h"
-#include "helper.h"
+
+#define L qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << __FUNCTION__
+struct LogScope {
+    QString msg;
+    LogScope(const QString& m) : msg(m) {
+        qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << msg << "->";
+    }
+
+    ~LogScope() {
+        qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << msg << "<-";
+    }
+};
+#define LSCOPE LogScope l(__FUNCTION__);
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -27,9 +38,8 @@ void MainWindow::exec_connect()
     er::ApiDefault *api = er::IntegrationManager::erApi<er::ApiDefault>().release();
     api->peopleGet(QDateTime::currentDateTime());
     connect(api, &er::ApiDefault::peopleGetCompletedOK, this, [api](QList<er::ER__people_get_200_response_inner> result){
-        qDebug() << __FUNCTION__ << "Got results";
         for (const er::ER__people_get_200_response_inner& r : result) {
-            qDebug() << r.getFirstName() << r.getLastName() << r.getDateOfBirth();
+            L << r.getFirstName() << r.getLastName() << r.getDateOfBirth();
         }
         api->deleteLater();
     });
@@ -37,23 +47,21 @@ void MainWindow::exec_connect()
 
 QCoro::Task<void> MainWindow::exec_await()
 {
-    LOGSCOPE
+    LSCOPE
     QList<er::ER__people_get_200_response_inner> result = co_await exec_awaitCo();
-    qDebug() << __FUNCTION__ << "Got results";
     for (const er::ER__people_get_200_response_inner& r : result) {
-        qDebug() << r.getFirstName() << r.getLastName() << r.getDateOfBirth();
+        L << r.getFirstName() << r.getLastName() << r.getDateOfBirth();
     }
     co_return;
 }
 
 QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_awaitCo()
 {
-    LOGSCOPE
+    LSCOPE
     auto api = er::IntegrationManager::erApi<er::ApiDefault>().release();
 
     QList<er::ER__people_get_200_response_inner> result;
     for (int i = 1; i < 4; i++) {
-        qDebug() << "Calling api->peopleGet() with page" << i;
         result.append(co_await api->peopleGet(QDateTime::currentDateTime(), i));
     }
 
@@ -64,7 +72,6 @@ QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_await
 
 void MainWindow::on_pbStart_clicked()
 {
-    LOGSCOPE
     exec_await();
     // exec_connect();
 }

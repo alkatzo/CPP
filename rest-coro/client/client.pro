@@ -21,9 +21,7 @@ HEADERS += \
     er_apidefault.h \
     er_base.h \
     er_dispatcher.h \
-    er_future.h \
     er_integrationmanager.h \
-    helper.h \
     mainwindow.h
 
 FORMS += \
@@ -41,4 +39,4 @@ include($$PWD/qcoro/qcoro.pri)
 include($$PWD/openapi/ER_client.pri)
 
 # For QtCreator to navigate through <coroutine>
-DEFINES += __cpp_impl_coroutine
+# DEFINES += __cpp_impl_coroutine
