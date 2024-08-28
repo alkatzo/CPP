@@ -39,3 +39,6 @@ win32:INCLUDEPATH *= $$[QT_INSTALL_HEADERS]/QtZlib
 
 include($$PWD/qcoro/qcoro.pri)
 include($$PWD/openapi/ER_client.pri)
+
+# For QtCreator to navigate through <coroutine>
+DEFINES += __cpp_impl_coroutine

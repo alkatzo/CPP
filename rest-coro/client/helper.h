@@ -3,14 +3,24 @@
 #include <QDebug>
 #include <QDateTime>
 
-#define LOG Log log(__FUNCTION__);
-
 struct Log{
     QString msg;
-    Log(const QString &str) : msg(str) {
-        qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << msg << "->";
+    bool scope;
+    Log() = default;
+    Log(const QString &str, bool scope = false) : msg(str), scope(scope) {
+        if (scope)
+            qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << msg << "->";
     }
     ~Log() {
-        qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << msg << "<-";
+        if (scope) {
+            qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << msg << "<-";
+        }
+    }
+
+    inline QDebug &operator<<(auto &&m) {
+        return qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << msg << m;
     }
 };
+
+#define LOGSCOPE Log logscope(__FUNCTION__, true);
+#define LOG Log l(__FUNCTION__);

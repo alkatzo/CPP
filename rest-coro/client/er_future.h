@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QCoroTask>
+#include <coroutine>
 #include "helper.h"
 
 template<typename T>
@@ -19,10 +20,18 @@ struct ER_Future
     }
 
     struct Promise {
+        Promise() {
+            LOG l << this;
+        }
+
+        ~Promise() {
+            LOG l << this;
+        }
+
         void setResult(const T& r) {
-            LOG
-            result = r;
-            if (handle) {
+            if (handle && !handle.done()) {
+                LOGSCOPE
+                result = r;
                 handle.resume();
             }
         }
@@ -31,10 +40,18 @@ struct ER_Future
     };
 
     ER_Future() : promise(new Promise) {
-        LOG
+        // LOG l << this;
+    }
+
+    ER_Future(const ER_Future& f) : promise(f.promise) {
+        // LOG l << this;
+    }
+
+    ~ER_Future() {
+        // LOG l << this;
     }
 
 public:
-    Promise *promise;
+    std::shared_ptr<Promise> promise;
 };
 

@@ -37,7 +37,7 @@ void MainWindow::exec_connect()
 
 QCoro::Task<void> MainWindow::exec_await()
 {
-    LOG
+    LOGSCOPE
     QList<er::ER__people_get_200_response_inner> result = co_await exec_awaitCo();
     qDebug() << __FUNCTION__ << "Got results";
     for (const er::ER__people_get_200_response_inner& r : result) {
@@ -48,7 +48,7 @@ QCoro::Task<void> MainWindow::exec_await()
 
 QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_awaitCo()
 {
-    LOG
+    LOGSCOPE
     auto api = er::IntegrationManager::erApi<er::ApiDefault>().release();
 
     QList<er::ER__people_get_200_response_inner> result;
@@ -64,7 +64,7 @@ QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_await
 
 void MainWindow::on_pbStart_clicked()
 {
-    LOG
+    LOGSCOPE
     exec_await();
     // exec_connect();
 }

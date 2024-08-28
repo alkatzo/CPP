@@ -15,7 +15,7 @@ people_data = [
 
 @app.route('/v1/people', methods=['GET'])
 def get_people():
-    time.sleep(10)  # simulate 3 sec delay
+    time.sleep(5)  # simulate 3 sec delay
 
     datetime_str = request.args.get('datetime')
     page = request.args.get('page', type=int)
