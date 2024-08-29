@@ -64,7 +64,7 @@ protected:
         // connect full error response
         QObject::connect(api, s_api_error, api, [=, this](auto worker, auto error_type, auto error_str) {
             this->onError(source, auth_rerun, authAttempt, 1, s_error, worker, error_type, error_str);
-            f.promise->setError();
+            f.promise->setResult({});
         });
         // connect request completed
         QObject::connect(api, s_api_completed, api, [=, this]() {
@@ -99,12 +99,6 @@ private:
         void setResult(const T& r) {
             if (handle && !handle.done()) {
                 result = r;
-                handle.resume();
-            }
-        }
-
-        void setError() {
-            if (handle && !handle.done()) {
                 handle.resume();
             }
         }
