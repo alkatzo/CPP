@@ -6,6 +6,9 @@
 #include <chrono>
 
 #include "er_integrationmanager.h"
+#include "DB/REST/restapiimpl.h"
+#include "DB/REST/restexecutor.h"
+#include "DB/backend.h"
 
 #define L qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << __FUNCTION__
 struct LogScope {
@@ -45,6 +48,11 @@ void MainWindow::exec_connect()
     });
 }
 
+/**
+ * @brief MainWindow::exec_await
+ * Execute by calling co_await exec_awaitCo();
+ * @return
+ */
 QCoro::Task<void> MainWindow::exec_await()
 {
     LSCOPE
@@ -55,6 +63,11 @@ QCoro::Task<void> MainWindow::exec_await()
     co_return;
 }
 
+/**
+ * @brief MainWindow::exec_awaitCo
+ * execute by calling er::ApiDefault::peopleGet()
+ * @return
+ */
 QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_awaitCo()
 {
     LSCOPE
@@ -70,9 +83,43 @@ QCoro::Task<QList<er::ER__people_get_200_response_inner>> MainWindow::exec_await
     co_return result;
 }
 
+/**
+ * @brief MainWindow::exec_direct_rest
+ * execute by calling db::rest::RestApiImpl::peopleGet()
+ * @return
+ */
+QCoro::Task<void> MainWindow::exec_direct_rest()
+{
+    LSCOPE
+    db::rest::RestApiImpl r;
+    QList<QString> res = co_await r.peopleGet(QDateTime::currentDateTime());
+
+    for (const auto &s : res) {
+        L << s;
+    }
+}
+
+/**
+ * @brief MainWindow::exec_rest
+ * execute by calling db::Backend::peopleGet() via RestExecutor executor
+ * @return
+ */
+QCoro::Task<void> MainWindow::exec_rest()
+{
+    LSCOPE
+    auto bk = db::Backend<db::rest::RestApiImpl, db::rest::RestExecutor>();
+    QList<QString> res = co_await bk.peopleGet(QDateTime::currentDateTime());
+
+    for (const auto &s : res) {
+        L << s;
+    }
+}
+
 void MainWindow::on_pbStart_clicked()
 {
-    exec_await();
+    // exec_await();
     // exec_connect();
+    // exec_direct_rest();
+    exec_rest();
 }
 
