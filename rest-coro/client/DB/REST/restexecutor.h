@@ -40,33 +40,6 @@ public:
     auto sync(QString s, O *o, R (O::*method)(Ps...), As... args) {
         return (o->*method)(args...);
     }
-
-protected:
-    template<typename R, typename DeleterT = Deleter, typename CB>
-    void connect(QFuture<R> future, CB cb, QObject *ctx = nullptr) {
-        QFutureWatcher<R> *fw = new QFutureWatcher<R>;
-
-        if (!ctx) {
-            QObject::connect(fw, &QFutureWatcherBase::finished, [cb, fw]() mutable {
-                cb(fw->result());
-                fw->deleteLater();
-            });
-        }
-        else {
-            QPointer ctxWatcher{ctx};
-            QObject::connect(fw, &QFutureWatcherBase::finished, [ctxWatcher, cb, fw]() mutable {
-                if (ctxWatcher) {
-                    cb(fw->result()); // client code must take ownership on the result
-                }
-                else {
-                    DeleterT::free(fw->result()); // otherwise deallocate the result
-                }
-                fw->deleteLater();
-            });
-        }
-
-        fw->setFuture(future);
-    }
 };
 
 }}

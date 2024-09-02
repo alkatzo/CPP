@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    db::Db::makeDB();
     er::IntegrationManager::initialise();
 }
 
@@ -115,11 +116,22 @@ QCoro::Task<void> MainWindow::exec_rest()
     }
 }
 
+QCoro::Task<void> MainWindow::exec_rest_via_db()
+{
+    LSCOPE
+    QList<QString> res = co_await db::Db::the->peopleGet(QDateTime::currentDateTime());
+
+    for (const auto &s : res) {
+        L << s;
+    }
+}
+
 void MainWindow::on_pbStart_clicked()
 {
     // exec_await();
     // exec_connect();
     // exec_direct_rest();
-    exec_rest();
+    // exec_rest();
+    exec_rest_via_db();
 }
 
