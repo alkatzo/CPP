@@ -10,6 +10,7 @@ else:win32: QMAKE_CXXFLAGS *= -std:c++20
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    DB/REST/pager.cpp \
     DB/REST/restapiimpl.cpp \
     DB/db.cpp \
     er_apidefault.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
 
 HEADERS += \
     DB/REST/helper.h \
+    DB/REST/pager.h \
     DB/REST/restapiimpl.h \
     DB/REST/restexecutor.h \
     DB/backend.h \

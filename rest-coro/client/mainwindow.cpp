@@ -8,6 +8,7 @@
 #include "er_integrationmanager.h"
 #include "DB/REST/restapiimpl.h"
 #include "DB/REST/restexecutor.h"
+#include "DB/REST/pager.h"
 #include "DB/backend.h"
 
 #define L qDebug().noquote() << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz") << __FUNCTION__
@@ -126,12 +127,32 @@ QCoro::Task<void> MainWindow::exec_rest_via_db()
     }
 }
 
+QCoro::Task<void> MainWindow::exec_rest_via_generator()
+{
+    LSCOPE
+    db::rest::Pager pager;
+    auto peoplePager = pager.peopleGet(QDateTime::currentDateTime());
+    // We must co_await begin() to obtain the initial iterator
+    auto peopleIt = co_await peoplePager.begin();
+    L << "Pages:";
+    while (peopleIt != peoplePager.end()) {
+        L << "Next page:";
+        QList<QString> page = *peopleIt;
+        for (const auto &s : page) {
+            L << s;
+        }
+        // And we must co_await increment
+        co_await ++(peopleIt);
+    }
+}
+
 void MainWindow::on_pbStart_clicked()
 {
     // exec_await();
     // exec_connect();
     // exec_direct_rest();
     // exec_rest();
-    exec_rest_via_db();
+    // exec_rest_via_db();
+    exec_rest_via_generator();
 }
 

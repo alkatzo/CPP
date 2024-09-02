@@ -32,6 +32,8 @@ private:
 
     QCoro::Task<void> exec_rest_via_db();
 
+    QCoro::Task<void> exec_rest_via_generator();
+
 private slots:
     void on_pbStart_clicked();
 
