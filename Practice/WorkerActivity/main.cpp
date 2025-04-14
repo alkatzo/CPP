@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
+#include <ranges>
+#include <numeric>
 
 class Activity {
 public:
@@ -168,7 +170,7 @@ public:
             }
 
             if(!inserted) {
-                workers.push_back(worker);
+                workers.emplace_back(std::move(worker));
             }
         }
     }
@@ -212,8 +214,59 @@ public:
         return activityNodes;
     }
 
+#if __cplusplus < 202002L
+    std::list<Activity> getPendingActivitiesByType(Activity::ActivityType type) {
+        std::list<Activity> lstActivities;
+        for(const auto& [id, activity] : pendingActivities) {
+            if(activity.getActivityType() == type) {
+                lstActivities.push_back(activity);
+            }
+        }
+
+        return lstActivities;
+    }
+#else
+    std::list<Activity> getPendingActivitiesByType(Activity::ActivityType type) {
+        std::list<Activity> lstActivities;
+
+        std::ranges::copy_if(
+            pendingActivities | std::views::values,
+            std::back_inserter(lstActivities),
+            [type](const Activity& a) {
+                return a.getActivityType() == type;
+            }
+        );
+
+        return lstActivities;
+    }
+#endif
+
+    int totalSizeOfPendingActivities() {
+        return std::accumulate(pendingActivities.begin(), pendingActivities.end(), 0, [](int init, const auto& p){
+            return init + p.second.getSize();
+        });
+    }
+
+
+    int getBusiestWorker() {
+        if(workers.size() == 0) {
+            return -1;
+        }
+
+        int busiestId = 0;
+        size_t maxTasksAssigned = 0;
+        for(const auto& [id, lstActivities] : assignedActivities) {
+            if(lstActivities.size() > maxTasksAssigned) {
+                maxTasksAssigned = lstActivities.size();
+                busiestId = id;
+            }
+        }
+        return busiestId;
+    }
+
 private:
     void assign(Activity&& a, Worker::IdType workerId) {
+        a.setIsCompleted(true);
         assignedActivities[workerId].push_back(std::move(a));
     }
 
