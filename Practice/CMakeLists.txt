@@ -12,3 +12,6 @@ add_subdirectory(ThreadManagementGuide-accumulate)
 add_subdirectory(WorkerActivity)
 add_subdirectory(UserDB)
 add_subdirectory(ShoppingMall)
+add_subdirectory(Test)
+add_subdirectory(DesignPatterns)
+

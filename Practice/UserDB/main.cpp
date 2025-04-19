@@ -1,3 +1,4 @@
+#include <iostream>
 #include <unordered_map>
 #include <list>
 #include <memory>
@@ -126,6 +127,16 @@ std::list<User>* compareUsers(std::list<User>& lstDB, std::list<User>& lstUpd) {
 
 int main()
 {
+    std::string input = "100 3.14 hello";
+    std::stringstream ss(input);
+
+    ss << std::setw(10) << std::setfill('.') << std::left << "Item";
+    ss << std::setw(8) << std::right << 42;
+    ss << std::fixed << std::setprecision(2) << std::setw(10) << 3.14159;
+
+    std::string formatted = ss.str();
+    std::cout << formatted << std::endl;
+
     using namespace std::chrono;
 
     sys_time<milliseconds> now_ms = time_point_cast<milliseconds>(system_clock::now());

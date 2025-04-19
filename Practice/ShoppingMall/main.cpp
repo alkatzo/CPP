@@ -1,159 +1,135 @@
-#include <unordered_map>
-#include <list>
-#include <memory>
+#include <iostream>
+#include <vector>
 #include <string>
-#include <utility>
-#include <chrono>
-#include <functional>
+#include <numeric>
+#include <algorithm>
+#include <map>
+#include <unordered_set>
 
-
-class Customer {
-public:
-    Customer(int id, const std::string &name) : id(id), name(name)
-    {}
-
-    int getId() const
-    {
-        return id;
-    }
-
-    void setId(int newId)
-    {
-        id = newId;
-    }
-
-    std::string getName() const
-    {
-        return name;
-    }
-
-    void setName(const std::string &newName)
-    {
-        name = newName;
-    }
-
-    std::chrono::year_month_day getDob() const
-    {
-        return dob;
-    }
-
-    void setDob(const std::chrono::year_month_day &newDob)
-    {
-        dob = newDob;
-    }
-
-    std::chrono::year_month_day getEnrollmentDate() const
-    {
-        return enrollment_date;
-    }
-
-    void setEnrollmentDate(const std::chrono::year_month_day &newEnrollment_date)
-    {
-        enrollment_date = newEnrollment_date;
-    }
-
-    std::chrono::sys_time<std::chrono::milliseconds> getLastAccess() const
-    {
-        return last_access;
-    }
-
-    void setLastAccess(const std::chrono::sys_time<std::chrono::milliseconds> &newLast_access)
-    {
-        last_access = newLast_access;
-    }
-
-
-private:
+struct Customer {
     int id;
     std::string name;
-    std::chrono::year_month_day dob;
-    std::chrono::year_month_day enrollment_date;
-    std::chrono::sys_time<std::chrono::milliseconds> last_access;
 };
 
+struct Shop {
+    int id;
+    std::string name;
+    std::string category;
+};
 
-bool operator==(const User& l, const User& r) {
-    return
-        l.getId() == r.getId() &&
-        l.getDob() == r.getDob() &&
-        l.getEnrollmentDate() == r.getEnrollmentDate() &&
-        l.getLastAccess() == r.getLastAccess() &&
-        l.getName() == r.getName();
-}
+struct Visit {
+    int customerId;
+    int shopId;
+    std::string date;
+    std::vector<double> purchases;
+};
 
-std::list<User>* compareUsers(std::list<User>& lstDB, std::list<User>& lstUpd) {
+class MallDatabase {
+public:
+    std::vector<Customer> customers;
+    std::vector<Shop> shops;
+    std::vector<Visit> visits;
 
-    std::list<User>* res = new std::list<User>[2];
-
-    std::list<User>& newUsers = res[0];
-    std::list<User>& updUsers = res[1];
-
-    if(lstDB.empty() || lstUpd.empty()) {
-        return {};
+    // Query: Total money spent by a given customer
+    double totalSpentByCustomer(int customerId) const {
+        return std::accumulate(visits.begin(), visits.end(), 0, [customerId](double acc, const Visit& visit){
+            if(visit.customerId == customerId) {
+                return acc + std::accumulate(visit.purchases.begin(), visit.purchases.end(), 0, [](double acc, double purches){
+                           return acc + purches;
+                       });
+            }
+            else {
+                return 0.0;
+            }
+        });
     }
 
-    using UserIDType = decltype(std::declval<User>().getId());
-    std::unordered_map<UserIDType, std::reference_wrapper<const User>> db;
-    std::unordered_map<UserIDType, std::reference_wrapper<const User>> updUserMap;
-
-    // build the db
-    for(const auto& user : lstDB) {
-        db.emplace(user.getId(), std::cref(user));
-    }
-
-    for(const auto& u : lstUpd) {
-        if(u.getId() == 0) {
-            newUsers.push_back(u);
+    // Query: Total revenue per shop
+    std::map<int, double> totalRevenuePerShop() const {
+        std::map<int, double> revenue;
+        for(const auto& visit : visits) {
+            revenue[visit.shopId] += std::accumulate(visit.purchases.begin(), visit.purchases.end(), 0);
         }
-        else {
-            const auto it = db.find(u.getId());
-            if(it != db.end() && u != (*it).second) {
-                updUserMap.emplace(u.getId(), std::cref(u));
+        return revenue;
+    }
+
+    // Query: Shop with the highest total revenue
+    const Shop* highestRevenueShop() const {
+        std::map<int, double> revByShop = totalRevenuePerShop();
+        double max_rev = -1.0;
+        int max_shop_id = -1;
+        for(const auto& p : revByShop) {
+            if(p.second > max_rev) {
+                max_rev = p.second;
+                max_shop_id = p.first;
             }
         }
+        if(max_shop_id == -1) {
+            return nullptr;
+        }
+        auto sit = std::find_if(shops.begin(), shops.end(), [max_shop_id](const Shop& s){
+            return s.id == max_shop_id;
+        });
+
+        return &(*sit);
     }
 
-    for(const auto& updUserMapEntry : updUserMap) {
-        updUsers.push_back(updUserMapEntry.second);
+    // Query: Total amount spent in shops of a given category
+    double totalSpendingByCategory(const std::string& category) const {
+        std::unordered_set<int> shop_set;
+
+        for(const Shop& shop : shops) {
+            if(shop.category == category) {
+                shop_set.emplace(shop.id);
+            }
+        }
+
+        double total_spent_by_category = 0.0;
+        for(const Visit& visit : visits) {
+            if(shop_set.find(visit.shopId) != shop_set.end())
+                continue;
+            total_spent_by_category += std::accumulate(visit.purchases.begin(), visit.purchases.end(), 0.0);
+        }
+
+        return total_spent_by_category;
     }
 
-    return res;
-}
+};
 
-int main()
-{
-    using namespace std::chrono;
+int main() {
+    MallDatabase db;
 
-    sys_time<milliseconds> now_ms = time_point_cast<milliseconds>(system_clock::now());
+    // Add customers
+    db.customers.push_back({1, "Alice"});
+    db.customers.push_back({2, "Bob"});
+    db.customers.push_back({3, "Carol"});
 
-    std::list<User> db({
-                        User(1, "A", year{2000}/1/1, year{2020}/1/1, now_ms - 20s),
-                        User(2, "B", year{2000}/1/2, year{2020}/1/1, now_ms - 20s),
-                        User(3, "C", year{2000}/1/3, year{2020}/1/1, now_ms - 20s),
-                        User(4, "D", year{2000}/1/4, year{2020}/1/1, now_ms - 21s),
-                        User(5, "E", year{2000}/1/5, year{2020}/1/1, now_ms - 20s),
-                        User(6, "F", year{2000}/1/6, year{2020}/1/1, now_ms - 20s),
-                        User(7, "G", year{2000}/1/7, year{2020}/1/1, now_ms - 20s),
-                        });
+    // Add shops
+    db.shops.push_back({101, "Tech World", "Electronics"});
+    db.shops.push_back({102, "Fashion Hub", "Clothing"});
+    db.shops.push_back({103, "Tasty Treats", "Food"});
 
+    // Add visits
+    db.visits.push_back({1, 101, "2025-04-10", {299.99, 89.50}});
+    db.visits.push_back({1, 102, "2025-04-11", {49.99}});
+    db.visits.push_back({2, 103, "2025-04-10", {12.99, 5.50}});
+    db.visits.push_back({2, 101, "2025-04-12", {199.99}});
+    db.visits.push_back({3, 103, "2025-04-10", {3.50, 7.25, 2.25}});
 
-    std::list<User> upd({
-                        User(1, "AA", year{2000}/1/1, year{2020}/1/1, now_ms - 20s),
-                        User(2, "B", year{2000}/1/2, year{2020}/1/1, now_ms - 20s),
-                        User(7, "GG", year{2000}/1/7, year{2020}/1/1, now_ms - 20s),
-                        User(0, "AAA", year{2000}/1/1, year{2020}/1/1, now_ms - 20s),
-                        User(7, "G", year{2000}/1/7, year{2020}/1/1, now_ms - 20s),
-                        User(7, "G", year{2000}/1/7, year{2020}/1/1, now_ms - 20s)
-                        });
+    // Run a sample query
+    std::cout << "Total spent by Alice: $"
+              << db.totalSpentByCustomer(1) << "\n";
 
-    auto res = compareUsers(db, upd);
-
-    std::list<User> newUsers = res[0];
-    std::list<User> updUsers = res[1];
+    auto shopRevenue = db.totalRevenuePerShop();
+    std::cout << "\nTotal revenue per shop:\n";
+    for (const auto& [shopId, revenue] : shopRevenue) {
+        auto it = std::find_if(db.shops.begin(), db.shops.end(), [shopId](const Shop& s) {
+            return s.id == shopId;
+        });
+        if (it != db.shops.end()) {
+            std::cout << it->name << ": $" << revenue << "\n";
+        }
+    }
 
     return 0;
 }
-
-
-
-
