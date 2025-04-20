@@ -56,7 +56,7 @@ public:
 
 
 template<typename ...Types>
-class Drawer : public Types...
+class StaticCastDrawer : public Types...
 {
 public:
     template<typename T>
@@ -70,6 +70,14 @@ public:
         }
     }
 };
+
+template<typename ...Types>
+class Drawer : public Types...
+{
+public:
+    using Types::draw...;
+};
+
 
 // Helper to collect call operators from lambdas
 template<class... Ts>
@@ -106,9 +114,13 @@ int main()
     Rectangle r2;
     Triangle t2;
 
+    StaticCastDrawer<CircleDrawer, RectangleDrawer, TriangleDrawer> sc_drawer;
+    sc_drawer(r2);
+    sc_drawer(t2);
+
+    // Option 3
     Drawer<CircleDrawer, RectangleDrawer, TriangleDrawer> drawer;
-    drawer(r2);
-    drawer(t2);
+    drawer.draw(r2);
 
     return 0;
 }
