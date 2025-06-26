@@ -13,4 +13,4 @@ add_executable(ThreadManagementGuide
 # target_link_libraries(ThreadManagementGuide PRIVATE Threads::Threads)
 
 # Enable warnings (optional)
-target_compile_options(ThreadManagementGuide PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(ThreadManagementGuide PRIVATE -Wall -pedantic)

@@ -8,4 +8,4 @@ add_executable(DesignPatterns
 )
 
 # Enable warnings (optional)
-target_compile_options(DesignPatterns PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(DesignPatterns PRIVATE -Wall -pedantic)

@@ -7,4 +7,4 @@ add_executable(UserDB
 )
 
 # Enable warnings (optional)
-target_compile_options(UserDB PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(UserDB PRIVATE -Wall -pedantic)

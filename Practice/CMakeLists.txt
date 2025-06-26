@@ -15,3 +15,5 @@ add_subdirectory(ShoppingMall)
 add_subdirectory(Test)
 add_subdirectory(DesignPatterns)
 
+
+add_subdirectory("Bridge")

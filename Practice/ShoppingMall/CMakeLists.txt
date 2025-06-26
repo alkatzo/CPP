@@ -7,4 +7,4 @@ add_executable(ShoppingMall
 )
 
 # Enable warnings (optional)
-target_compile_options(ShoppingMall PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(ShoppingMall PRIVATE -Wall -pedantic)

@@ -7,4 +7,4 @@ add_executable(WorkerActivity
 )
 
 # Enable warnings (optional)
-target_compile_options(WorkerActivity PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(WorkerActivity PRIVATE -Wall -pedantic)

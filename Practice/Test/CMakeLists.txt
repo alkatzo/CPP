@@ -7,4 +7,4 @@ add_executable(Test
 )
 
 # Enable warnings (optional)
-target_compile_options(Test PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(Test PRIVATE -Wall -pedantic)
