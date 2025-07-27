@@ -103,30 +103,36 @@ double PerformanceTests::measureQueuePerformance(int iterations, int numProducer
     SynchronizedQueue<LockStrategy> queue;
     std::atomic<int> pushCount{0};
     std::atomic<int> popCount{0};
-    std::atomic<bool> stop{false};
+    std::atomic<int> producersFinished{0};
     
     auto start = std::chrono::high_resolution_clock::now();
     
     // Start producer threads
     std::vector<std::thread> producers;
     for (int p = 0; p < numProducers; ++p) {
-        producers.emplace_back([&queue, &pushCount, iterations, numProducers]() {
+        producers.emplace_back([&queue, &pushCount, &producersFinished, iterations, numProducers]() {
             for (int i = 0; i < iterations / numProducers; ++i) {
                 MarketData data("TEST", i * 1.0, i, std::chrono::system_clock::now(), i);
                 queue.push(data);
                 pushCount++;
             }
+            producersFinished++;
         });
     }
     
     // Start consumer threads
     std::vector<std::thread> consumers;
     for (int c = 0; c < numConsumers; ++c) {
-        consumers.emplace_back([&queue, &popCount, &stop, iterations]() {
+        consumers.emplace_back([&queue, &popCount, &producersFinished, iterations, numProducers]() {
             while (popCount < iterations) {
                 MarketData data;
                 if (queue.try_pop(data)) {
                     popCount++;
+                } else {
+                    // If no data and all producers are finished, break
+                    if (producersFinished >= numProducers && queue.empty()) {
+                        break;
+                    }
                 }
             }
         });
@@ -137,7 +143,9 @@ double PerformanceTests::measureQueuePerformance(int iterations, int numProducer
         thread.join();
     }
     
-    stop = true;
+    // Shutdown the queue after all producers finish
+    queue.shutdown_queue();
+    
     for (auto& thread : consumers) {
         thread.join();
     }

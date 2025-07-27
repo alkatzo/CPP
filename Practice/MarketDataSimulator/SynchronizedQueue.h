@@ -103,7 +103,8 @@ bool SynchronizedQueue<LockStrategy>::try_pop(MarketData& data) {
             }
             
             lock_strategy.unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            // Shorter sleep for better responsiveness
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
     }
 }
