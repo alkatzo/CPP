@@ -8,10 +8,13 @@ services:
     volumes:
       - ./opentelemetry-collector-config/config.dev.yaml:/etc/config.dev.yaml
     ports:
-      - "4317:4317"   # OTLP/gRPC
-      - "4318:4318"   # OTLP/HTTP
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"  # Prometheus scrape endpoint
     depends_on:
       - zipkin
+      - prometheus
+      - loki
     networks:
       - observability
 
@@ -19,7 +22,37 @@ services:
     image: openzipkin/zipkin:latest
     container_name: zipkin
     ports:
-      - "9411:9411"  # UI + API
+      - "9411:9411"
+    networks:
+      - observability
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - observability
+
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
     networks:
       - observability
 

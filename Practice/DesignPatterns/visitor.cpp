@@ -88,12 +88,12 @@ struct overload : Ts...
 };
 
 // deduction guide
-// it says ctor of overload that receives args of types Ts... returns overload<Ts...>
-// it helps the ctor in main create correct type from lambdas passed to it
-template<class... Ts>
-overload(Ts...) -> overload<Ts...>;
+// The deduction guide, which tells CTAD how to instantiate the class template overload.
+// NOT required in c++ 20 - it can deduce types from ctor
+// template<class... Ts>
+// overload(Ts...) -> overload<Ts...>;
 
-int main()
+int _main()
 {
     std::variant<Circle, Rectangle, Triangle> c = Circle();
     std::variant<Circle, Rectangle, Triangle> r = Rectangle();

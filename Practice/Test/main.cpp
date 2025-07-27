@@ -1,59 +1,97 @@
-#include <iostream>
-#include <unordered_map>
-#include <list>
+#include <cstring>
 #include <memory>
-#include <string>
 #include <utility>
-#include <chrono>
-#include <cmath>
-#include <numeric>
 
-
-using uint = unsigned int;
-
-uint modpow(uint b, uint e, uint mod) {
-    uint r = 1;
-
-    for(int i = 0; i < e; i++) {
-        r = (r * b) % mod;
+class Buffer {
+public:
+    Buffer(size_t size) : data(std::make_unique<char[]>(size)) {
     }
 
-    return r % mod;
-}
+private:
+    std::unique_ptr<char[]> data;
+};
 
-// find minimum index of max a[i]^a[i+1] % (10^9 + 7)
-int findMinIndex(const std::vector<uint>& arr) {
-    int min_idx = -1;
-    int max_modulo = -1;
 
-    int modulo = std::pow(10, 9) + 7;
+class Test {
+public:
+    explicit Test(int* pi, int* pj = nullptr) : pi{pi}, pj{pj} {}
 
-    for(int i = 0; i < arr.size() - 1; i++) {
-        int res  = modpow(arr[i], arr[i+1], modulo);
-        if(res > max_modulo) {
-            max_modulo = res;
-            min_idx = i;
+    ~Test() {
+        delete pi;
+        delete pj;
+    }
+
+    Test(const Test& o) {
+        pi = o.pi ? new int{*o.pi} : nullptr;
+        pj = o.pj ? new int{*o.pj} : nullptr;
+    }
+
+    Test& operator=(const Test& o) {
+        if(this != &o) {
+            Test tmp{o};
+            swap(tmp);
         }
+
+        return *this;
     }
 
-    return min_idx;
+    Test(Test&& o) {
+        swap(o);
+    }
+
+    Test& operator=(Test&& o) {
+        if(this != &o) {
+            delete pi;
+            delete pj;
+
+            pi = std::exchange(o.pi, nullptr);
+            pj = std::exchange(o.pj, nullptr);
+        }
+
+        return *this;
+    }
+
+private:
+    void swap(Test& o) {
+        int* tmp = pi;
+        pi = o.pi;
+        o.pi = tmp;
+    }
+
+private:
+    int* pi{};
+    int* pj{};
+};
+
+/**
+ * concepts
+ */
+
+template<typename T>
+concept Numeric = requires(T a){
+    a + 1; a * 1;
+};
+
+// single constraint
+auto arg42(const Numeric auto& arg) {
+    return arg + 42;
+}
+
+// multiple constraint
+template<typename T>
+requires Numeric<T> && std::is_integral_v<T>
+auto arg43(const T& arg) {
+    return arg + 43;
 }
 
 
-int main()
-{
-    std::vector<uint> arr{(uint)std::pow(10, 5),
-                         (uint)std::pow(10, 2),
-                         (uint)std::pow(2, 5),
-                         (uint)std::pow(3, 5),
-                         (uint)std::pow(4, 5),
-                         (uint)std::pow(10, 5),
-                         (uint)std::pow(10, 5),
-                         (uint)std::pow(10, 5),
-                         (uint)std::pow(10, 5),
-    };
+int main(int argc, char** argv) {
+    Buffer b1(2);
+    // Buffer b2(b1); // Compiler error because data is non-copiable. In this case compiler deletes the copy ctor
+    Buffer b2(std::move(b1));
 
-    std::cout << findMinIndex(arr);
+    auto r = arg42(2);
+    r = arg43(3);
 
     return 0;
 }

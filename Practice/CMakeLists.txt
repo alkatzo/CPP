@@ -17,3 +17,12 @@ add_subdirectory(DesignPatterns)
 
 
 add_subdirectory("Bridge")
+
+add_subdirectory("Templates")
+
+# add_subdirectory("ResourceManager")
+
+add_subdirectory("AsyncTask")
+add_subdirectory(ZeroOne)
+add_subdirectory(LeetcodeTest)
+add_subdirectory(MarketDataSimulator)

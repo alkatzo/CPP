@@ -2,6 +2,7 @@
 #include <thread>
 #include <chrono>
 #include <queue>
+#include <future>
 
 using namespace std;
 
@@ -44,7 +45,6 @@ public:
 int main()
 {    
     std::cout << "Allowed threads " << std::thread::hardware_concurrency() << std::endl;
-
 
     std::queue<int> clean_crew;
     std::queue<int> engine_crew;
@@ -92,10 +92,25 @@ int main()
         }
     });
 
-
     clean_processor.detach();
     engine_processor.detach();
     processor.join();
+
+    // thread with future / promise example
+    // Worker function
+    {
+        auto l = [](int x, std::promise<int> resultPromise) {
+            std::this_thread::sleep_for(std::chrono::seconds(2)); // simulate delay
+            int result = x * x;
+            resultPromise.set_value(result); // send result back
+        };
+        std::promise<int> promise;
+        std::future<int> fut = promise.get_future();
+
+        std::thread worker(l, 7, std::move(promise));
+        std::cout << "7^2 = " << fut.get() << std::endl;
+    }
+
 
     return 0;
 }
