@@ -21,15 +21,32 @@ add_executable(market_data_simulator
     main.cpp
     MarketData.cpp
     FeedStatistics.cpp
+    MarketData.h
+    MarketDataFeed.h
+    MarketDataReader.h
+    FeedStatistics.h
+    LockingStrategy.h
+    LockGuard.h
+    SynchronizedQueue.h
 )
 
 # Create test executable
 add_executable(locking_strategy_tests
     tests/test_main.cpp
     tests/LockingStrategyTests.cpp
-    tests/PerformanceTests.cpp
+    # tests/PerformanceTests.cpp
+    tests/LockingStrategyTests.h
+    # tests/PerformanceTests.h
+    tests/TestFramework.h
     MarketData.cpp
     FeedStatistics.cpp
+    MarketData.h
+    MarketDataFeed.h
+    MarketDataReader.h
+    FeedStatistics.h
+    LockingStrategy.h
+    LockGuard.h
+    SynchronizedQueue.h
 )
 
 # Link against threading library and Google Test

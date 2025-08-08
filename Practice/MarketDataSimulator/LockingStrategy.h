@@ -94,12 +94,12 @@ private:
 public:
     // Constructors
     NoLockingStrategy() = default;
-    NoLockingStrategy(const NoLockingStrategy&) = default;
-    NoLockingStrategy(NoLockingStrategy&&) = default;
+    NoLockingStrategy(const NoLockingStrategy&) = delete;
+    NoLockingStrategy(NoLockingStrategy&&) = delete;
     
     // Assignment operators
-    NoLockingStrategy& operator=(const NoLockingStrategy&) = default;
-    NoLockingStrategy& operator=(NoLockingStrategy&&) = default;
+    NoLockingStrategy& operator=(const NoLockingStrategy&) = delete;
+    NoLockingStrategy& operator=(NoLockingStrategy&&) = delete;
     
     // Destructor
     ~NoLockingStrategy() = default;

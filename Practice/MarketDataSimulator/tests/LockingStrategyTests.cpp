@@ -239,4 +239,123 @@ TEST_F(LockingStrategyTests, SynchronizedQueueMultiThreaded) {
     t2.join();
     
     EXPECT_EQ(pushCount, popCount);  // All pushed items should be popped
+}
+
+TEST_F(LockingStrategyTests, SynchronizedQueueTwoProducersTwoConsumersCAS) {
+    SynchronizedQueue<CASLockingStrategy> queue;
+    std::atomic<int> pushCount{0};
+    std::atomic<int> popCount{0};
+    std::atomic<int> producersFinished{0};
+    std::vector<int> consumedValues;  // To track what was consumed
+    std::mutex consumedMutex;  // To protect the consumedValues vector
+    
+    const int messagesPerProducer = 1000;
+    const int totalMessages = messagesPerProducer * 2;  // 2 producers
+    
+    // Producer 1
+    auto producer1 = [&queue, &pushCount, &producersFinished, messagesPerProducer]() {
+        for (int i = 0; i < messagesPerProducer; ++i) {
+            MarketData data("PROD1", i * 1.0, i, std::chrono::system_clock::now(), i);
+            queue.push(data);
+            pushCount++;
+            std::this_thread::sleep_for(std::chrono::microseconds(100));  // Small delay
+        }
+        producersFinished++;
+    };
+    
+    // Producer 2
+    auto producer2 = [&queue, &pushCount, &producersFinished, messagesPerProducer]() {
+        for (int i = 0; i < messagesPerProducer; ++i) {
+            MarketData data("PROD2", (i + 1000) * 1.0, i + 1000, std::chrono::system_clock::now(), i + 1000);
+            queue.push(data);
+            pushCount++;
+            std::this_thread::sleep_for(std::chrono::microseconds(100));  // Small delay
+        }
+        producersFinished++;
+    };
+    
+    // Consumer 1
+    auto consumer1 = [&queue, &popCount, &producersFinished, &consumedValues, &consumedMutex, totalMessages]() {
+        while (popCount < totalMessages) {
+            MarketData data;
+            if (queue.try_pop(data)) {
+                popCount++;
+                {
+                    std::lock_guard<std::mutex> lock(consumedMutex);
+                    consumedValues.push_back(data.feed_id);
+                }
+            } else {
+                // If no data and all producers are finished, break
+                if (producersFinished >= 2 && queue.empty()) {
+                    break;
+                }
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+        }
+    };
+    
+    // Consumer 2
+    auto consumer2 = [&queue, &popCount, &producersFinished, &consumedValues, &consumedMutex, totalMessages]() {
+        while (popCount < totalMessages) {
+            MarketData data;
+            if (queue.try_pop(data)) {
+                popCount++;
+                {
+                    std::lock_guard<std::mutex> lock(consumedMutex);
+                    consumedValues.push_back(data.feed_id);
+                }
+            } else {
+                // If no data and all producers are finished, break
+                if (producersFinished >= 2 && queue.empty()) {
+                    break;
+                }
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+        }
+    };
+    
+    // Start all threads
+    std::thread p1(producer1);
+    std::thread p2(producer2);
+    std::thread c1(consumer1);
+    std::thread c2(consumer2);
+    
+    // Wait for all threads to complete
+    p1.join();
+    p2.join();
+    
+    // Shutdown the queue after all producers finish
+    queue.shutdown_queue();
+    
+    c1.join();
+    c2.join();
+    
+    // Verify results
+    EXPECT_EQ(pushCount, totalMessages);
+    EXPECT_EQ(popCount, totalMessages);
+    EXPECT_EQ(consumedValues.size(), totalMessages);
+    
+    // Verify that all sequence numbers are present (0-999 from prod1, 1000-1999 from prod2)
+    std::sort(consumedValues.begin(), consumedValues.end());
+    for (int i = 0; i < totalMessages; ++i) {
+        EXPECT_EQ(consumedValues[i], i);
+    }
+    
+    // Verify queue is empty after all processing
+    EXPECT_TRUE(queue.empty());
+    EXPECT_EQ(queue.size(), 0);
+    
+    // Print some statistics
+    std::cout << "\n--- Two Producers, Two Consumers CAS Test Results ---" << std::endl;
+    std::cout << "Total messages pushed: " << pushCount << std::endl;
+    std::cout << "Total messages consumed: " << popCount << std::endl;
+    std::cout << "Unique consumed values: " << consumedValues.size() << std::endl;
+    
+    // Verify statistics
+    auto stats = queue.get_statistics();
+    EXPECT_EQ(stats.size(), 2);  // Should have stats for both PROD1 and PROD2
+    EXPECT_TRUE(stats.find("PROD1") != stats.end());
+    EXPECT_TRUE(stats.find("PROD2") != stats.end());
+    EXPECT_EQ(stats["PROD1"].messages_sent, messagesPerProducer);
+    EXPECT_EQ(stats["PROD2"].messages_sent, messagesPerProducer);
 } 
