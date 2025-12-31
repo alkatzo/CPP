@@ -1,6 +1,0 @@
-C:/Users/User/Projects/CPP/VSCodeTest/Test/CMakeFiles/Test.dir
-C:/Users/User/Projects/CPP/VSCodeTest/Test/CMakeFiles/edit_cache.dir
-C:/Users/User/Projects/CPP/VSCodeTest/Test/CMakeFiles/rebuild_cache.dir
-C:/Users/User/Projects/CPP/VSCodeTest/Test/CMakeFiles/list_install_components.dir
-C:/Users/User/Projects/CPP/VSCodeTest/Test/CMakeFiles/install.dir
-C:/Users/User/Projects/CPP/VSCodeTest/Test/CMakeFiles/install/local.dir
